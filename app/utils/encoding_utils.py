@@ -3,13 +3,17 @@ import string
 from typing import List
 
 
-def generate_redis_array(string: str, lst: List[str]) -> str:
+def generate_redis_array(string: str = "", lst: List[str] = []) -> str:
     redis_array = []
-    redis_array.append(f"*2\r\n${len(string)}\r\n{string}\r\n")
-    redis_array.append(f"*{len(lst)}\r\n")
-    for element in lst:
-        redis_array.append(f"${len(element)}\r\n{element}\r\n")
+    if(string):
+        redis_array.append(f"*2\r\n${len(string)}\r\n{string}\r\n")
+    if(lst):
+        redis_array.append(f"*{len(lst)}\r\n")
+        for element in lst:
+            redis_array.append(f"${len(element)}\r\n{element}\r\n")
     return ''.join(redis_array)
+
+
 
 def as_bulk_string(payload: str) -> str:
     return f"${len(payload)}\r\n{payload}\r\n"
@@ -53,8 +57,6 @@ def parse_redis_protocol(data: bytes):
             else:
                 index += 1
 
-        print("COMMANDS: ", commands)
-        print("LENGTHS: ", lengths)
         return commands, lengths  # Return the commands and lengths arrays
     except (IndexError, ValueError):
         return [], []  # Return empty arrays if there was an error

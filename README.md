@@ -1,61 +1,71 @@
-[![progress-banner](https://backend.codecrafters.io/progress/redis/91b9c4f6-3822-4f5b-b38a-b18a6b240c1b)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# CoolCache
+This project aims to implement a Redis-like server in Python, providing a subset of Redis functionality. It allows clients to interact with the server using the Redis protocol and supports various Redis commands for data manipulation and retrieval. I gratefully acknowledge CodeCrafters for providing the framework for setting up this cache, and I aim to continue adding features to this and exploring more about caching and Redis functionality. 
 
-This is a starting point for Python solutions to the
-["Build Your Own Redis" Challenge](https://codecrafters.io/challenges/redis).
+## Features
 
-In this challenge, you'll build a toy Redis clone that's capable of handling
-basic commands like `PING`, `SET` and `GET`. Along the way we'll learn about
-event loops, the Redis protocol and more.
+Basic key-value operations (SET, GET)
+Expiration of keys using the PX option in the SET command
+Handling of expired keys in the GET command
+Pub/Sub functionality (PUBLISH, SUBSCRIBE)
+Partial implementation of Redis Streams (XADD, XRANGE, XREAD)
+Replication of data from a master server
+RDB file parsing to load the initial dataset
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## Getting Started
 
-# Passing the first stage
+## Installation
 
-The entry point for your Redis implementation is in `app/main.py`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+### Clone the repository:
+`git clone https://github.com/jameswagner/coolcache.git`
 
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
-```
+### Change into the project directory:
+`cd coolcache`
 
-That's all!
+### Install the required dependencies:
+`pip install -r requirements.txt`
 
-# Stage 2 & beyond
+### Install: 
+`pip install .`
 
-Note: This section is for stages 2 and beyond.
+## Usage
 
-1. Ensure you have `python (3.x)` installed locally
-1. Run `./spawn_redis_server.sh` to run your Redis server, which is implemented
-   in `app/main.py`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+### Server
+To start the Coolcache server, run the following command:
+`python .\app\main.py --port 6379`
 
-# Troubleshooting
+This will start the server on the default port 6379. You can specify a different port using the `--port` option.
 
-## module `socket` has no attribute `create_server`
 
-When running your server locally, you might see an error like this:
+### Client
+To connect to the server, you can use the coolcache client library in Python or the command line.
 
-```
-Traceback (most recent call last):
-  File "/.../python3.7/runpy.py", line 193, in _run_module_as_main
-    "__main__", mod_spec)
-  File "/.../python3.7/runpy.py", line 85, in _run_code
-    exec(code, run_globals)
-  File "/app/app/main.py", line 11, in <module>
-    main()
-  File "/app/app/main.py", line 6, in main
-    s = socket.create_server(("localhost", 6379), reuse_port=True)
-AttributeError: module 'socket' has no attribute 'create_server'
-```
+#### Command line
+To use the command line, the port and hostname arguments should be specified, or the 
+`COOLCACHE_HOST` and `COOLCACHE_PORT` environment variables should be set.
 
-This is because `socket.create_server` was introduced in Python 3.8, and you
-might be running an older version.
+eg to set a variable
+`coolcache --host localhost --port 6379 SET foo bar`
+or if the environment variables are already set: 
+`coolcache SET foo bar`
 
-You can fix this by installing Python 3.8 locally and using that.
+to open a shell, enter `coolcache` without any command (only the `--port` and `--host` if the environment variables are not set)
 
-If you'd like to use a different version of Python, change the `language_pack`
-value in `codecrafters.yml`.
+#### Python
+The Python functions impemented are in app/client/coolcache_client.py
+you can execute an import: 
+`from app.client.coolcache_client import CoolClient`
+
+The initialize a client instance with your port and username:
+`client = CoolClient("localhost", 6379)`
+
+and call functions on this client:
+`client.set_value("foo", "bar")`
+
+## TODO
+Here are the top 5 Redis functionalities that need to be implemented:
+
+Complete implementation of Redis Streams (XDEL, XLEN, XINFO, etc.)
+Persistence (saving the dataset to disk using RDB or AOF)
+Transactions (MULTI, EXEC, DISCARD)
+Lua scripting (EVAL, EVALSHA, SCRIPT)
+Cluster support (distributing data across multiple nodes)

@@ -1,4 +1,7 @@
+import re
 import socket
+
+from app.utils.encoding_utils import generate_redis_array, parse_redis_protocol
 
 
 class CoolClient:
@@ -12,9 +15,14 @@ class CoolClient:
         self.sock.close()
         
     def send_command(self, command):
-        self.sock.sendall(command.encode())
-        response = self.sock.recv(1024).decode()
-        return response
+        command_list = re.split(r'\s+', command.strip())
+        print(command_list)
+        redis_command = generate_redis_array(string="", lst=command_list)
+        self.sock.sendall(redis_command.encode())
+        response = self.sock.recv(1024)
+        response, _ = parse_redis_protocol(response)
+        print(''.join(response))
+        return ''.join(response)
 
     def keys(self):
         command = 'KEYS\n'

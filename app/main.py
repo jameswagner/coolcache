@@ -1,7 +1,7 @@
 import argparse
 import asyncio
 import logging
-from .AsyncServer import AsyncServer
+from app.AsyncServer import AsyncServer
 
 async def main() -> None:
     global ping_count

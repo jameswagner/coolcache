@@ -1,14 +1,14 @@
 import sys
 import os
 import argparse
-from coolcache_client import CoolClient
+from app.client.coolcache_client import CoolClient
 
 def repl_shell(client: CoolClient):
     while True:
         command = input('coolcache> ')
         if command.lower() == 'quit':
             break
-        response = client.send_command(command + '\n')
+        response = client.send_command(command)
         print(response)
 
 
@@ -22,6 +22,7 @@ def create_client():
 
     host = args.host or os.environ.get('COOLCACHE_HOST')
     port = args.port or os.environ.get('COOLCACHE_PORT')
+    port = int(port) if port else None
 
     if not host or not port:
         print('Error: CoolCache host and port must be specified either as command-line arguments or environment variables.')
