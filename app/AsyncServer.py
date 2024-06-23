@@ -100,14 +100,7 @@ class AsyncServer:
         encoded_keys = self.as_array(hash_map.keys())
         return encoded_keys
 
-    def as_array(self, data: List[str]) -> str:
-        encoded_data = []
-        encoded_data.append(f"*{len(data)}\r\n")
-        
-        for element in data:
-            encoded_data.append(f"${len(element)}\r\n{element}\r\n")
-        
-        return ''.join(encoded_data)
+
 
  
 

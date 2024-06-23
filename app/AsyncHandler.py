@@ -4,7 +4,7 @@ import logging
 
 from typing import TYPE_CHECKING
 
-import app.commands.commands as commands
+from app.commands import hash_map_commands, list_commands, set_commands, sorted_set_commands, stream_commands, string_commands, commands
 import app.utils.encoding_utils as encoding_utils
 if TYPE_CHECKING:
     from .AsyncServer import AsyncServer
@@ -22,8 +22,8 @@ class AsyncRequestHandler:
         self.command_map = {
             "PING": commands.PingCommand(),
             "ECHO": commands.EchoCommand(),
-            "SET": commands.SetCommand(),
-            "GET": commands.GetCommand(),
+            "SET": string_commands.SetCommand(),
+            "GET": string_commands.GetCommand(),
             "INFO": commands.InfoCommand(),
             "REPLCONF": commands.ReplConfCommand(),
             "PSYNC": commands.PSyncCommand(),
@@ -31,9 +31,50 @@ class AsyncRequestHandler:
             "CONFIG": commands.ConfigCommand(),
             "KEYS": commands.KeysCommand(),
             "TYPE": commands.TypeCommand(),
-            "XADD": commands.XAddCommand(),
-            "XRANGE": commands.XRangeCommand(),
-            "XREAD": commands.XReadCommand(),
+            "XADD": stream_commands.XAddCommand(),
+            "XRANGE": stream_commands.XRangeCommand(),
+            "XREAD": stream_commands.XReadCommand(),
+            "LPUSH": list_commands.LPushCommand(),
+            "RPUSH": list_commands.RPushCommand(),
+            "LPOP": list_commands.LPopCommand(),
+            "RPOP": list_commands.RPopCommand(),
+            "LLEN": list_commands.LLenCommand(),
+            "LINDEX": list_commands.LIndexCommand(),
+            "LINSERT": list_commands.LInsertCommand(),
+            "LPUSHX": list_commands.LPushXCommand(),
+            "RPUSHX": list_commands.RPushXCommand(),
+            "LRANGE": list_commands.LRangeCommand(),
+            "LSET": list_commands.LSetCommand(),
+            "DEL": commands.DelCommand(),
+            "SADD": set_commands.SAddCommand(),
+            "SCARD": set_commands.SCardCommand(),
+            "SISMEMBER": set_commands.SIsMemberCommand(),
+            "SMEMBERS": set_commands.SMembersCommand(),
+            "SREM": set_commands.SRemCommand(),
+            "SPOP": set_commands.SPopCommand(),
+            "SUNION": set_commands.SUnionCommand(),
+            "SINTER": set_commands.SInterCommand(),
+            "SDIFF": set_commands.SDiffCommand(),
+            "SMOVE": set_commands.SMoveCommand(),
+            "MSET": string_commands.MSetCommand(),
+            "MGET": string_commands.MGetCommand(),
+            "INCR": string_commands.IncrCommand(),
+            "DECR": string_commands.DecrCommand(),
+            "INCRBY": string_commands.IncrByCommand(),
+            "DECRBY": string_commands.DecrByCommand(),
+            "APPEND": string_commands.AppendCommand(),
+            "HSET": hash_map_commands.HSetCommand(),
+            "HGET": hash_map_commands.HGetCommand(),
+            "HGETALL": hash_map_commands.HGetAllCommand(),
+            "ZADD": sorted_set_commands.ZAddCommand(),
+            "ZREM": sorted_set_commands.ZRemCommand(),
+            "ZRANGE": sorted_set_commands.ZRangeCommand(),
+            "ZRANGEBYSCORE": sorted_set_commands.ZRangeByScoreCommand(),
+            "ZRANK": sorted_set_commands.ZRankCommand(),
+            "ZREVRANK": sorted_set_commands.ZRevRankCommand(),
+            "ZSCORE": sorted_set_commands.ZScoreCommand(),
+            "ZCARD": sorted_set_commands.ZCardCommand(),
+            "ZCOUNT": sorted_set_commands.ZCountCommand(),
         }
 
     async def process_request(self) -> None:

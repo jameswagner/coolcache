@@ -10,6 +10,7 @@ Pub/Sub functionality (PUBLISH, SUBSCRIBE)
 Partial implementation of Redis Streams (XADD, XRANGE, XREAD)
 Replication of data from a master server
 RDB file parsing to load the initial dataset
+Support for most functions with HashMaps, Lists, Sets, and Sorted Sets
 
 ## Getting Started
 
@@ -44,9 +45,9 @@ To use the command line, the port and hostname arguments should be specified, or
 `COOLCACHE_HOST` and `COOLCACHE_PORT` environment variables should be set.
 
 eg to set a variable
-`coolcache --host localhost --port 6379 SET foo bar`
+`coolcache-cli --host localhost --port 6379 SET foo bar`
 or if the environment variables are already set: 
-`coolcache SET foo bar`
+`coolcache-cli SET foo bar`
 
 to open a shell, enter `coolcache` without any command (only the `--port` and `--host` if the environment variables are not set)
 
