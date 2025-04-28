@@ -3,7 +3,7 @@ import asyncio
 import logging
 from app.AsyncServer import AsyncServer
 
-async def main() -> None:
+async def async_main() -> None:
     global ping_count
     ping_count = 0
     
@@ -27,5 +27,9 @@ async def main() -> None:
     logging.basicConfig(level=logging.INFO)
     await AsyncServer.create(port=args.port, replica_server=replica_server, replica_port=replica_port, dir=args.dir, dbfilename=args.dbfilename)
 
+def main():
+    """Entry point for the console script. Wraps the async main function."""
+    asyncio.run(async_main())
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

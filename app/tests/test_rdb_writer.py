@@ -20,7 +20,7 @@ from app.utils.rdb_writer import (
     write_header,
     write_database_selector,
     write_footer,
-    write_redis_file,
+    write_rdb_file,
     REDIS_MAGIC,
     RDB_VERSION_CURRENT,
     RDB_OPCODE_EOF,
@@ -540,7 +540,7 @@ def test_write_redis_file_simple(temp_rdb_path):
     }
     
     # Write the RDB file
-    write_redis_file(temp_rdb_path, data)
+    write_rdb_file(temp_rdb_path, data)
     
     # Verify the file exists
     assert os.path.exists(temp_rdb_path)
@@ -589,7 +589,7 @@ def test_write_redis_file_with_expiry(temp_rdb_path):
     }
     
     # Write the RDB file
-    write_redis_file(temp_rdb_path, data, expires)
+    write_rdb_file(temp_rdb_path, data, expires)
     
     # Verify the file exists
     assert os.path.exists(temp_rdb_path)

@@ -9,7 +9,7 @@ Handling of expired keys in the GET command
 Pub/Sub functionality (PUBLISH, SUBSCRIBE)
 Partial implementation of Redis Streams (XADD, XRANGE, XREAD)
 Replication of data from a master server
-RDB file parsing to load the initial dataset
+Complete RDB file parsing and writing to load and save datasets
 Support for most functions with HashMaps, Lists, Sets, and Sorted Sets
 RDB persistence (SAVE, BGSAVE, automatic background saving)
 
@@ -69,7 +69,13 @@ and call functions on this client:
 
 ### Persistence
 
-CoolCache supports RDB persistence for data durability. You can use the following commands to manage persistence:
+CoolCache supports RDB persistence for data durability. The implementation includes:
+
+- Complete RDB file parsing to load data from existing Redis RDB files
+- Full RDB file writing capability with support for all Redis data types (strings, lists, sets, hashes, sorted sets)
+- Proper handling of expiry times in both seconds and milliseconds
+
+You can use the following commands to manage persistence:
 
 - `SAVE` - Synchronously save the dataset to disk (blocking operation)
 - `BGSAVE` - Save the dataset to disk in the background
@@ -87,7 +93,6 @@ By default, CoolCache will automatically save the dataset when a certain number 
 Here are the top Redis functionalities that need to be implemented:
 
 Complete implementation of Redis Streams (XDEL, XLEN, XINFO, etc.)
-Enhance RDB persistence with more features (better compression, recovery, etc.)
 Implement AOF persistence (logging every write operation)
 Transactions (MULTI, EXEC, DISCARD)
 Lua scripting (EVAL, EVALSHA, SCRIPT)

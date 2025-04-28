@@ -176,19 +176,19 @@ class SaveCommand(RedisCommand):
         filepath = os.path.join(dir_path, filename)
         
         # Write RDB file
-        success = write_rdb_file(
-            handler.server.memory,
-            handler.server.expiration,
-            handler.server.streamstore,
-            filepath
-        )
-        
-        if success:
+        try:
+            write_rdb_file(
+                filepath,
+                handler.memory,
+                handler.expiration
+            )
+            
             # Update last save time
             handler.server.last_save_time = int(time.time())
             return "+OK\r\n"
-        else:
-            return "-ERR Failed to save RDB file\r\n"
+        except Exception as e:
+            print(f"Error saving RDB file: {e}")
+            return f"-ERR Failed to save RDB file: {str(e)}\r\n"
 
 class BGSaveCommand(RedisCommand):
     async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
@@ -207,26 +207,28 @@ class BGSaveCommand(RedisCommand):
         # Create task to save in background
         asyncio.create_task(self._save_in_background(
             handler,
-            handler.server.memory.copy(),
-            handler.server.expiration.copy(),
-            handler.server.streamstore.copy(),
+            handler.memory.copy(),
+            handler.expiration.copy(),
             filepath
         ))
         
         return "+Background saving started\r\n"
     
-    async def _save_in_background(self, handler, memory, expiration, streamstore, filepath):
+    async def _save_in_background(self, handler, memory, expiration, filepath):
         """Save the RDB file in a background task."""
         # Use an executor to perform the blocking file operation
         loop = asyncio.get_event_loop()
-        success = await loop.run_in_executor(
-            None,
-            lambda: write_rdb_file(memory, expiration, streamstore, filepath)
-        )
-        
-        if success:
+        try:
+            await loop.run_in_executor(
+                None,
+                lambda: write_rdb_file(filepath, memory, expiration)
+            )
+            
             # Update last save time
             handler.server.last_save_time = int(time.time())
+            print(f"Background save completed successfully")
+        except Exception as e:
+            print(f"Error in background save: {e}")
 
 class LastSaveCommand(RedisCommand):
     async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:

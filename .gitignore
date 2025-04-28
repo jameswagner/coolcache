@@ -173,3 +173,11 @@ htmlcov/
 # Local environment
 .env
 .vscode/
+
+# RDB files
+*.rdb
+*.rdb.gz
+*.rdb.bz2
+*.rdb.xz
+*.rdb.lzma
+*.rdb.lz4

@@ -12,8 +12,18 @@ def setup_handler():
     handler = AsyncMock()
     handler.memory = {}
     handler.expiration = {}
+    handler.server = AsyncMock()
     handler.server.writers = []
     handler.server.numacks = 0
+    handler.server.config = {
+        "dir": "",
+        "dbfilename": "dump.rdb",
+        "save": "900 1 300 10 60 10000"  # Default Redis-like save configuration
+    }
+    handler.server.last_save_time = 0
+    handler.server.memory = handler.memory  # For direct access in some commands
+    handler.server.expiration = handler.expiration
+    handler.server.streamstore = {}
     mock_writer = AsyncMock()
     handler.server.writers = [mock_writer]
     return handler

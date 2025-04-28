@@ -21,6 +21,15 @@ RDB_TYPE_HASH = b'\x03'
 RDB_TYPE_ZSET = b'\x04'
 RDB_TYPE_STREAM = b'\x06'  # Not fully implemented yet
 
+# Import CoolCacheSortedSet for type checking
+try:
+    from app.commands.sorted_set_commands import CoolCacheSortedSet
+except ImportError:
+    # Define a placeholder for testing
+    class CoolCacheSortedSet:
+        def as_list(self):
+            return []
+
 def encode_length(length: int) -> bytes:
     """
     Encode an integer using Redis length encoding format.
@@ -173,6 +182,12 @@ def encode_value(value: Any) -> Tuple[bytes, bytes]:
     elif isinstance(value, dict):
         # Hash value
         return RDB_TYPE_HASH, encode_hash_value(value)
+    elif hasattr(value, '__class__') and value.__class__.__name__ == 'CoolCacheSortedSet':
+        # Handle CoolCacheSortedSet type
+        zset_data = []
+        for score, member in value.data:
+            zset_data.append((member, score))
+        return RDB_TYPE_ZSET, encode_zset_value(zset_data)
     else:
         raise ValueError(f"Unsupported value type: {type(value)}")
 
@@ -285,7 +300,7 @@ def write_footer(file: BinaryIO) -> None:
     """
     file.write(RDB_OPCODE_EOF)
 
-def write_redis_file(
+def write_rdb_file(
     filename: str, 
     data: Dict[str, Any], 
     expires: Optional[Dict[str, Union[int, float]]] = None,
