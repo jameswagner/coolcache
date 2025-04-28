@@ -1,6 +1,6 @@
 import random
 import string
-from typing import List
+from typing import List, Any, Iterable
 
 from app.utils.constants import EMPTY_ARRAY_RESPONSE, NOT_FOUND_RESPONSE, WRONG_TYPE_RESPONSE
 
@@ -18,6 +18,30 @@ def generate_redis_array(string: str = "", lst: List[str] = []) -> str:
                 element = None
             redis_array.append(as_bulk_string(element))
     return ''.join(redis_array)
+
+def as_array(items: Iterable[Any]) -> str:
+    """
+    Convert a Python collection to a Redis array.
+    
+    Args:
+        items: Collection of items to convert to a Redis array
+        
+    Returns:
+        Redis protocol array string
+    """
+    if not items:
+        return EMPTY_ARRAY_RESPONSE
+        
+    result = [f"*{len(list(items))}\r\n"]
+    
+    for item in items:
+        if item is None:
+            result.append("$-1\r\n")
+        else:
+            str_item = str(item)
+            result.append(f"${len(str_item)}\r\n{str_item}\r\n")
+            
+    return ''.join(result)
 
 def as_bulk_string(payload: str) -> str:
     if not payload or payload == NOT_FOUND_RESPONSE:

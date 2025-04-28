@@ -75,6 +75,10 @@ class AsyncRequestHandler:
             "ZSCORE": sorted_set_commands.ZScoreCommand(),
             "ZCARD": sorted_set_commands.ZCardCommand(),
             "ZCOUNT": sorted_set_commands.ZCountCommand(),
+            "SAVE": commands.SaveCommand(),
+            "BGSAVE": commands.BGSaveCommand(),
+            "FLUSHALL": commands.FlushAllCommand(),
+            "LASTSAVE": commands.LastSaveCommand(),
         }
 
     async def process_request(self) -> None:

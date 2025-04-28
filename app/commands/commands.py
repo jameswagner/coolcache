@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 import asyncio
+import os
 import time
 from typing import List
 import app.utils.encoding_utils as encoding_utils
+from app.utils.rdb_writer import write_rdb_file
 
 from typing import TYPE_CHECKING
 
@@ -39,7 +41,15 @@ class TypeCommand(RedisCommand):
 
 class ConfigCommand(RedisCommand):
     async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
-        if len(command) > 1:
+        if len(command) < 2:
+            return "-ERR wrong number of arguments for 'config' command\r\n"
+        
+        subcommand = command[1].upper()
+        
+        if subcommand == "GET":
+            if len(command) < 3:
+                return "-ERR wrong number of arguments for 'config get' command\r\n"
+            
             config_params = command[2:]
             response = []
             for param in config_params:
@@ -49,7 +59,26 @@ class ConfigCommand(RedisCommand):
                     response.append(value)
                 else:
                     response.append("(nil)")
-            return handler.server.as_array(response)
+            return encoding_utils.as_array(response)
+            
+        elif subcommand == "SET":
+            if len(command) < 4:
+                return "-ERR wrong number of arguments for 'config set' command\r\n"
+            
+            param = command[2]
+            value = command[3]
+            
+            # Update the configuration
+            handler.server.config[param] = value
+            
+            # Special handling for save configuration
+            if param == "save":
+                handler.server._parse_save_config()
+                
+            return "+OK\r\n"
+            
+        else:
+            return f"-ERR unknown subcommand '{subcommand}' for CONFIG command\r\n"
 
 class WaitCommand(RedisCommand):
     async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
@@ -132,15 +161,84 @@ class DelCommand(RedisCommand):
                 print(f"KEY {key} NOT FOUND")
         return f":{count}\r\n"
     
+class SaveCommand(RedisCommand):
+    async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
+        """Execute the SAVE command which creates an RDB file with the current dataset."""
+        # Get config values
+        dir_path = handler.server.config.get("dir", "")
+        filename = handler.server.config.get("dbfilename", "dump.rdb")
+        
+        # If dir is not set, use current directory
+        if not dir_path:
+            dir_path = os.getcwd()
+            
+        # Create full file path
+        filepath = os.path.join(dir_path, filename)
+        
+        # Write RDB file
+        success = write_rdb_file(
+            handler.server.memory,
+            handler.server.expiration,
+            handler.server.streamstore,
+            filepath
+        )
+        
+        if success:
+            # Update last save time
+            handler.server.last_save_time = int(time.time())
+            return "+OK\r\n"
+        else:
+            return "-ERR Failed to save RDB file\r\n"
+
+class BGSaveCommand(RedisCommand):
+    async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
+        """Execute the BGSAVE command which saves the DB in background."""
+        # Get config values
+        dir_path = handler.server.config.get("dir", "")
+        filename = handler.server.config.get("dbfilename", "dump.rdb")
+        
+        # If dir is not set, use current directory
+        if not dir_path:
+            dir_path = os.getcwd()
+            
+        # Create full file path
+        filepath = os.path.join(dir_path, filename)
+        
+        # Create task to save in background
+        asyncio.create_task(self._save_in_background(
+            handler,
+            handler.server.memory.copy(),
+            handler.server.expiration.copy(),
+            handler.server.streamstore.copy(),
+            filepath
+        ))
+        
+        return "+Background saving started\r\n"
+    
+    async def _save_in_background(self, handler, memory, expiration, streamstore, filepath):
+        """Save the RDB file in a background task."""
+        # Use an executor to perform the blocking file operation
+        loop = asyncio.get_event_loop()
+        success = await loop.run_in_executor(
+            None,
+            lambda: write_rdb_file(memory, expiration, streamstore, filepath)
+        )
+        
+        if success:
+            # Update last save time
+            handler.server.last_save_time = int(time.time())
+
+class LastSaveCommand(RedisCommand):
+    async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
+        """Return the UNIX timestamp of the last successful save."""
+        return f":{handler.server.last_save_time}\r\n"
+
 class FlushAllCommand(RedisCommand):
     async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
         handler.memory.clear()
         handler.expiration.clear()
         return "+OK\r\n"
     
-
-
-
 class UnknownCommand(RedisCommand):
     async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
         return "-ERR unknown command\r\n"

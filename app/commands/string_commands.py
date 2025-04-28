@@ -1,8 +1,8 @@
 import time
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Dict, Any
 from app.commands.commands import RedisCommand
 from app.utils import encoding_utils
-from app.utils.constants import NON_INT_ERROR, NOT_FOUND_RESPONSE, WRONG_TYPE_RESPONSE
+from app.utils.constants import NON_INT_ERROR, NOT_FOUND_RESPONSE, WRONG_TYPE_RESPONSE, NIL_RESPONSE, FLOAT_ERROR_MESSAGE
 
 if TYPE_CHECKING:
     from app.AsyncHandler import AsyncRequestHandler
@@ -42,17 +42,42 @@ class MGetCommand(RedisCommand):
     
 class SetCommand(RedisCommand):
     async def execute(self, handler: 'AsyncRequestHandler', command: List[str]) -> str:
-        handler.memory[command[1]] = command[2]
-        if(len(command) > 4 and command[3].upper() == "PX" and command[4].isnumeric()):
-            expiration_duration = int(command[4]) / 1000  # Convert milliseconds to seconds
-            handler.expiration[command[1]] = time.time() + expiration_duration
+        if len(command) < 3:
+            return "-ERR wrong number of arguments for 'set' command\r\n"
+        
+        key = command[1]
+        value = command[2]
+        expiry_ms = None
+        
+        # Check for optional PX parameter
+        i = 3
+        while i < len(command):
+            if command[i].upper() == "PX" and i + 1 < len(command):
+                try:
+                    expiry_ms = int(command[i + 1])
+                except ValueError:
+                    return "-ERR value is not an integer or out of range\r\n"
+                i += 2
+            else:
+                i += 1
+        
+        handler.memory[key] = value
+        
+        if expiry_ms is not None:
+            handler.expiration[key] = time.time() + (expiry_ms / 1000.0)
         else:
-            handler.expiration[command[1]] = None
+            handler.expiration.pop(key, None)  # Remove any existing expiration
+        
+        # Register the change with the server for auto-save
+        handler.server.register_change()
+        
+        # Handle replication to replicas
         handler.server.numacks = 0  
         for writer in handler.server.writers:
             print(f"writing CMD {command} to writer: {writer.get_extra_info('peername')}")
             writer.write(encoding_utils.encode_redis_protocol(command))
             await writer.drain()
+        
         return "+OK\r\n"
     
 class MSetCommand(RedisCommand):
